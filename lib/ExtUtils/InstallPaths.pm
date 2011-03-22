@@ -7,11 +7,14 @@ use File::Spec ();
 use Carp ();
 
 my %attributes = (
-	installdirs => 'site',
-	install_base => undef,
-	prefix => undef,
-	verbose => 0,
-	blib => 'blib',
+	installdirs     => 'site',
+	install_base    => undef,
+	prefix          => undef,
+	verbose         => 0,
+	blib            => 'blib',
+	create_packlist => 1,
+	module_name     => undef,
+	destdir         => undef
 );
 
 my %explicit_accessors = map { $_ => 1 } qw/installdirs install_path/;
