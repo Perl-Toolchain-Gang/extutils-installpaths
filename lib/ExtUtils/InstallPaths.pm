@@ -172,7 +172,7 @@ sub installdirs {
 	return $self->{installdirs};
 }
 
-sub log_verbose {
+sub _log_verbose {
 	my $self = shift;
 	print @_ if $self->verbose;
 	return;
@@ -350,19 +350,19 @@ sub _prefixify {
 	my $rprefix = $self->prefix;
 	$rprefix .= '/' if $sprefix =~ m{/$};
 
-	$self->log_verbose("  prefixify $path from $sprefix to $rprefix\n") if defined $path && length $path;
+	$self->_log_verbose("  prefixify $path from $sprefix to $rprefix\n") if defined $path && length $path;
 
 	if (not defined $path or length $path == 0 ) {
-		$self->log_verbose("  no path to prefixify, falling back to default.\n");
+		$self->_log_verbose("  no path to prefixify, falling back to default.\n");
 		return $self->_prefixify_default( $type, $rprefix );
 	} elsif( !File::Spec->file_name_is_absolute($path) ) {
-		$self->log_verbose("    path is relative, not prefixifying.\n");
+		$self->_log_verbose("    path is relative, not prefixifying.\n");
 	} elsif( $path !~ s{^\Q$sprefix\E\b}{}s ) {
-		$self->log_verbose("    cannot prefixify, falling back to default.\n");
+		$self->_log_verbose("    cannot prefixify, falling back to default.\n");
 		return $self->_prefixify_default( $type, $rprefix );
 	}
 
-	$self->log_verbose("    now $path in $rprefix\n");
+	$self->_log_verbose("    now $path in $rprefix\n");
 
 	return $path;
 }
@@ -374,7 +374,7 @@ sub _prefixify_default {
 
 	my $default = $self->prefix_relpaths($self->installdirs, $type);
 	if( !$default ) {
-		$self->log_verbose("    no default install location for type '$type', using prefix '$rprefix'.\n");
+		$self->_log_verbose("    no default install location for type '$type', using prefix '$rprefix'.\n");
 		return $rprefix;
 	} else {
 		return $default;
@@ -421,7 +421,7 @@ sub install_map {
 	my ($self, $blib) = @_;
 	$blib ||= $self->blib;
 
-	my( %map, @skipping );
+	my (%map, @skipping);
 	foreach my $type ($self->install_types) {
 		my $localdir = File::Spec->catdir( $blib, $type );
 		next unless -e $localdir;
@@ -440,10 +440,7 @@ sub install_map {
 		}
 	}
 
-	$self->log_warn(
-		"WARNING: Can't figure out install path for types: @skipping\n" .
-		"Files will not be installed.\n"
-	) if @skipping;
+	warn("WARNING: Can't figure out install path for types: @skipping\nFiles will not be installed.\n") if @skipping;
 
 	# Write the packlist into the same place as ExtUtils::MakeMaker.
 	if ($self->create_packlist and my $module_name = $self->module_name) {
