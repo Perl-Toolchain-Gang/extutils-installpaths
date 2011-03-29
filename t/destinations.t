@@ -2,7 +2,7 @@
 
 use strict;
 use warnings FATAL => 'all';
-use Test::More tests => 113;
+use Test::More tests => 125;
 
 use Config;
 use File::Temp ();
@@ -41,7 +41,7 @@ my $config = ExtUtils::Config->new(values => {
 	installsitehtml3dir => catdir($tmp, 'site', 'html'),
 });
 
-my $mb = ExtUtils::InstallPaths->new(installdirs => 'site', config => $config);
+my $mb = ExtUtils::InstallPaths->new(installdirs => 'site', config => $config, module_name => 'ExtUtils::InstallPaths');
 isa_ok($mb, 'ExtUtils::InstallPaths');
 
 # Get us into a known state.
@@ -143,6 +143,14 @@ $mb->prefix(undef);
 		binhtml => catdir($tmp, 'site', 'html'),
 		libhtml => catdir($tmp, 'site', 'html'),
 	});
+	test_install_map($mb, {
+		read                      => '',
+		write                     => File::Spec->catfile($mb->install_destination('arch'), qw/auto ExtUtils InstallPaths .packlist/),
+		catdir('blib', 'lib')     => catdir($tmp, 'site', @installstyle, 'site_perl'),
+		catdir('blib', 'arch')    => catdir($tmp, 'site', @installstyle, 'site_perl', @Config{qw(version archname)}),
+		catdir('blib', 'bin')     => catdir($tmp, 'site', 'bin'),
+		catdir('blib', 'script')  => catdir($tmp, 'site', 'bin'),
+	}, 'installdirs=site');
 }
 
 # Is installdirs honored?
@@ -185,6 +193,15 @@ $mb->prefix(undef);
 		binhtml => catdir($install_base, 'html'),
 		libhtml => catdir($install_base, 'html'),
 	});
+
+	test_install_map($mb, {
+		read                      => '',
+		write                     => File::Spec->catfile($mb->install_destination('arch'), qw/auto ExtUtils InstallPaths .packlist/),
+		catdir('blib', 'lib')     => catdir($install_base, 'lib', 'perl5'),
+		catdir('blib', 'arch')    => catdir($install_base, 'lib', 'perl5', $Config{archname}),
+		catdir('blib', 'bin')     => catdir($install_base, 'bin'),
+		catdir('blib', 'script')  => catdir($install_base, 'bin'),
+	}, 'install_base');
 }
 
 
@@ -317,5 +334,16 @@ sub test_install_destinations {
 
 	while(my ($type, $expect) = each %$expect) {
 		is($build->install_destination($type), $expect, "$type destination");
+	}
+}
+
+sub test_install_map {
+	my ($paths, $expect, $case) = @_;
+
+	local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+	my $map = $paths->install_map;
+	while(my ($type, $expect) = each %$expect) {
+		is($map->{$type}, $expect, "$type destination for $case");
 	}
 }
