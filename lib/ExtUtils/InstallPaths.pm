@@ -51,16 +51,9 @@ sub config {
 	return $c->set($key => $val);
 }
 
-sub _default_install_paths {
+sub _default_install_sets {
 	my $self = shift;
-
 	my $c = $self->{config};
-	my $p = {};
-
-	my @libstyle = $c->get('installstyle') ?
-		File::Spec->splitdir($c->get('installstyle')) : qw(lib perl5);
-	my $arch     = $c->get('archname');
-	my $version  = $c->get('version');
 
 	my $bindoc  = $c->get('installman1dir') || undef;
 	my $libdoc  = $c->get('installman3dir') || undef;
@@ -68,7 +61,7 @@ sub _default_install_paths {
 	my $binhtml = $c->get('installhtml1dir') || $c->get('installhtmldir') || undef;
 	my $libhtml = $c->get('installhtml3dir') || $c->get('installhtmldir') || undef;
 
-	$p->{install_sets} = {
+	return {
 		core   => {
 			lib     => $c->get('installprivlib'),
 			arch    => $c->get('installarchlib'),
@@ -100,21 +93,18 @@ sub _default_install_paths {
 			libhtml => $c->get('installvendorhtml3dir') || $libhtml,
 		},
 	};
+}
 
-	$p->{original_prefix} = {
-		core   => $c->get('installprefixexp') || $c->get('installprefix') || $c->get('prefixexp') || $c->get('prefix') || '',
-		site   => $c->get('siteprefixexp'),
-		vendor => $c->get('usevendorprefix') ? $c->get('vendorprefixexp') : '',
-	};
-	$p->{original_prefix}{site} ||= $p->{original_prefix}{core};
-
+sub _default_base_relpaths {
 	# Note: you might be tempted to use $Config{installstyle} here
 	# instead of hard-coding lib/perl5, but that's been considered and
 	# (at least for now) rejected.  `perldoc Config` has some wisdom
 	# about it.
-	$p->{install_base_relpaths} = {
+
+	my $self = shift;
+	return {
 		lib     => ['lib', 'perl5'],
-		arch    => ['lib', 'perl5', $arch],
+		arch    => ['lib', 'perl5', $self->{config}->get('archname')],
 		bin     => ['bin'],
 		script  => ['bin'],
 		bindoc  => ['man', 'man1'],
@@ -122,8 +112,17 @@ sub _default_install_paths {
 		binhtml => ['html'],
 		libhtml => ['html'],
 	};
+}
 
-	$p->{prefix_relpaths} = {
+sub _default_prefix_relpaths {
+	my $self = shift;
+	my $c = $self->{config};
+
+	my @libstyle = $c->get('installstyle') ?  File::Spec->splitdir($c->get('installstyle')) : qw(lib perl5);
+	my $arch     = $c->get('archname');
+	my $version  = $c->get('version');
+
+	return {
 		core => {
 			lib        => [@libstyle],
 			arch       => [@libstyle, $version, $arch],
@@ -155,28 +154,20 @@ sub _default_install_paths {
 			libhtml    => ['html'],
 		},
 	};
-
-	return $p;
-}
-
-sub _default_install_sets {
-	my $self = shift;
-	return $self->_default_install_paths->{install_sets};
-}
-
-sub _default_base_relpaths {
-	my $self = shift;
-	return $self->_default_install_paths->{install_base_relpaths};
-}
-
-sub _default_prefix_relpaths {
-	my $self = shift;
-	return $self->_default_install_paths->{prefix_relpaths};
 }
 
 sub _default_original_prefix {
 	my $self = shift;
-	return $self->_default_install_paths->{original_prefix};
+	my $c = $self->{config};
+
+	my %ret = (
+		core   => $c->get('installprefixexp') || $c->get('installprefix') || $c->get('prefixexp') || $c->get('prefix') || '',
+		site   => $c->get('siteprefixexp'),
+		vendor => $c->get('usevendorprefix') ? $c->get('vendorprefixexp') : '',
+	);
+	$ret{site} ||= $ret{core};
+
+	return \%ret;
 }
 
 my %allowed_installdir = map { $_ => 1 } qw/core site vendor/;
