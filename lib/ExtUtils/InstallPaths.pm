@@ -162,12 +162,9 @@ sub _default_install_paths {
 sub installdirs {
 	my $self = shift;
 	if (@_) {
-		if ($_[0] !~ /^(core|site|vendor)$/) {
-			Carp::croak('ERROR: ', $_[0] eq 'perl'
-			  ? 'Perhaps you meant installdirs to be "core" rather than "perl"?'
-			  : 'installdirs must be one of "core", "site", or "vendor"');
-		}
-		$self->{installdirs} = shift;
+		my $value = shift;
+		Carp::croak('installdirs must be one of "core", "site", or "vendor"') if not $allowed_installdir{$value};
+		$self->{installdirs} = $value;
 	}
 	return $self->{installdirs};
 }
