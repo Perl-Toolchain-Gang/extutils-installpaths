@@ -159,6 +159,27 @@ sub _default_install_paths {
 	return $p;
 }
 
+sub _default_install_sets {
+	my $self = shift;
+	return $self->_default_install_paths->{install_sets};
+}
+
+sub _default_base_relpaths {
+	my $self = shift;
+	return $self->_default_install_paths->{install_base_relpaths};
+}
+
+sub _default_prefix_relpaths {
+	my $self = shift;
+	return $self->_default_install_paths->{prefix_relpaths};
+}
+
+sub _default_original_prefix {
+	my $self = shift;
+	return $self->_default_install_paths->{original_prefix};
+}
+
+my %allowed_installdir = map { $_ => 1 } qw/core site vendor/;
 sub installdirs {
 	my $self = shift;
 	if (@_) {
@@ -245,7 +266,7 @@ sub install_sets {
 	}
 	my $map = $self->_merge_arglist(
 		$self->{install_sets},
-		$self->_default_install_paths->{install_sets}
+		$self->_default_install_sets,
 	);
 	if (defined $dirs and defined $key) {
 		return $map->{$dirs}{$key};
@@ -269,7 +290,7 @@ sub original_prefix {
 	}
 	my $map = $self->_merge_arglist(
 		$self->{original_prefix},
-		$self->_default_install_paths->{original_prefix}
+		$self->_default_original_prefix,
 	);
 	return $map unless defined $key;
 	return $map->{$key}
@@ -284,7 +305,7 @@ sub install_base_relpaths {
 	}
 	my $map = $self->_merge_arglist(
 		$self->{install_base_relpaths},
-		$self->_default_install_paths->{install_base_relpaths}
+		$self->_default_base_relpaths,
 	);
 	return $map unless @_;
 	my $relpath = $map->{$_[0]};
@@ -303,7 +324,7 @@ sub prefix_relpaths {
 	}
 	my $map = $self->_merge_arglist(
 		$self->{prefix_relpaths}{$installdirs},
-		$self->_default_install_paths->{prefix_relpaths}{$installdirs}
+		$self->_default_prefix_relpaths->{$installdirs}
 	);
 	return $map unless @_;
 	my $relpath = $map->{$_[0]};
