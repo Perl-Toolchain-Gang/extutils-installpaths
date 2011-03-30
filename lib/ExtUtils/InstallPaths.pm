@@ -5,6 +5,7 @@ use warnings;
 
 use File::Spec ();
 use Carp ();
+use ExtUtils::Config;
 
 my %attributes = (
 	installdirs     => 'site',
@@ -30,13 +31,13 @@ for my $attribute (grep { not exists $explicit_accessors{$_} } keys %attributes)
 
 sub new {
 	my ($class, %args) = @_;
-	my $c = $args{config};
-	my $p = _default_install_paths({ config => $c });
-	$p->{install_path} ||= {};
-	for my $attribute (keys %attributes) {
-		$p->{$attribute} = exists $args{$attribute} ? $args{$attribute} : $attributes{$attribute};
-	}
-	return bless $p, $class;
+	my $c = $args{config} || ExtUtils::Config->new;
+	my %self = (
+		config => $c,
+		(map { $_ => $args{$_} || {} } qw/install_path install_base_relpaths/),
+		map { $_ => exists $args{$_} ? $args{$_} : $attributes{$_} } keys %attributes,
+	);
+	return bless \%self, $class;
 }
 
 sub config {
@@ -54,7 +55,7 @@ sub _default_install_paths {
 	my $self = shift;
 
 	my $c = $self->{config};
-	my $p = { config => $c };
+	my $p = {};
 
 	my @libstyle = $c->get('installstyle') ?
 		File::Spec->splitdir($c->get('installstyle')) : qw(lib perl5);
