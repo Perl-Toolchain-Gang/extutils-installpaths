@@ -31,7 +31,7 @@ for my $attribute (grep { not exists $explicit_accessors{$_} } keys %attributes)
 sub new {
 	my ($class, %args) = @_;
 	my $c = $args{config};
-	my $p = default_install_paths({ config => $c });
+	my $p = _default_install_paths({ config => $c });
 	$p->{install_path} ||= {};
 	for my $attribute (keys %attributes) {
 		$p->{$attribute} = exists $args{$attribute} ? $args{$attribute} : $attributes{$attribute};
@@ -41,8 +41,7 @@ sub new {
 
 sub config {
 	my $self = shift;
-	my $c = ref($self) ? $self->{config} : 'ExtUtils::Config';
-	return $c->all_config unless @_;
+	my $c = $self->{config};
 
 	my $key = shift;
 	return $c->get($key) unless @_;
@@ -51,7 +50,7 @@ sub config {
 	return $c->set($key => $val);
 }
 
-sub default_install_paths {
+sub _default_install_paths {
 	my $self = shift;
 
 	my $c = $self->{config};
@@ -248,7 +247,7 @@ sub install_sets {
 	}
 	my $map = $self->_merge_arglist(
 		$self->{install_sets},
-		$self->default_install_paths->{install_sets}
+		$self->_default_install_paths->{install_sets}
 	);
 	if (defined $dirs and defined $key) {
 		return $map->{$dirs}{$key};
@@ -272,7 +271,7 @@ sub original_prefix {
 	}
 	my $map = $self->_merge_arglist(
 		$self->{original_prefix},
-		$self->default_install_paths->{original_prefix}
+		$self->_default_install_paths->{original_prefix}
 	);
 	return $map unless defined $key;
 	return $map->{$key}
@@ -287,7 +286,7 @@ sub install_base_relpaths {
 	}
 	my $map = $self->_merge_arglist(
 		$self->{install_base_relpaths},
-		$self->default_install_paths->{install_base_relpaths}
+		$self->_default_install_paths->{install_base_relpaths}
 	);
 	return $map unless @_;
 	my $relpath = $map->{$_[0]};
@@ -306,7 +305,7 @@ sub prefix_relpaths {
 	}
 	my $map = $self->_merge_arglist(
 		$self->{prefix_relpaths}{$installdirs},
-		$self->default_install_paths->{prefix_relpaths}{$installdirs}
+		$self->_default_install_paths->{prefix_relpaths}{$installdirs}
 	);
 	return $map unless @_;
 	my $relpath = $map->{$_[0]};
