@@ -330,6 +330,8 @@ sub _prefixify_default {
 	}
 }
 
+if ($^O ne 'VMS') {
+	eval <<'EOF';
 # Translated from ExtUtils::MM_Unix::prefixify()
 sub _prefixify {
 	my($self, $path, $sprefix, $type) = @_;
@@ -352,6 +354,68 @@ sub _prefixify {
 	$self->_log_verbose("    now $path in $rprefix\n");
 
 	return $path;
+}
+EOF
+}
+else {
+	eval <<'EOF';
+require VMS::Filespec;
+
+sub _catprefix {
+	my ($self, $rprefix, $default) = @_;
+
+	my ($rvol, $rdirs) = File::Spec->splitpath($rprefix);
+	if ($rvol) {
+		return File::Spec->catpath($rvol, File::Spec->catdir($rdirs, $default), '');
+	}
+	else {
+		return File::Spec->catdir($rdirs, $default);
+	}
+}
+
+sub _prefixify {
+	my($self, $path, $sprefix, $type) = @_;
+	my $rprefix = $self->prefix;
+
+	return '' unless defined $path;
+
+	$self->_log_verbose("  prefixify $path from $sprefix to $rprefix\n");
+
+	# Translate $(PERLPREFIX) to a real path.
+	$rprefix = VMS::Filespec::vmspath($rprefix) if $rprefix;
+	$sprefix = VMS::Filespec::vmspath($sprefix) if $sprefix;
+
+	$self->_log_verbose("  rprefix translated to $rprefix\n  sprefix translated to $sprefix\n");
+
+	if (length($path) == 0 ) {
+		$self->_log_verbose("  no path to prefixify.\n")
+	}
+	elsif (!File::Spec->file_name_is_absolute($path)) {
+		$self->_log_verbose("	path is relative, not prefixifying.\n");
+	}
+	elsif ($sprefix eq $rprefix) {
+		$self->_log_verbose("  no new prefix.\n");
+	}
+	else {
+		my ($path_vol, $path_dirs) = File::Spec->splitpath( $path );
+		my $vms_prefix = $self->config('vms_prefix');
+		if ($path_vol eq $vms_prefix.':') {
+			$self->_log_verbose("  $vms_prefix: seen\n");
+
+			$path_dirs =~ s{^\[}{\[.} unless $path_dirs =~ m{^\[\.};
+			$path = $self->_catprefix($rprefix, $path_dirs);
+		}
+		else {
+			$self->_log_verbose("	cannot prefixify.\n");
+			return $self->prefix_relpaths($self->installdirs, $type);
+		}
+	}
+
+	$self->_log_verbose("	now $path\n");
+
+	return $path;
+}
+EOF
 }
 
 sub original_prefix {
