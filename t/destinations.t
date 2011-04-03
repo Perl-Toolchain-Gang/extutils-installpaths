@@ -10,7 +10,7 @@ use File::Temp ();
 use File::Spec::Functions qw/catdir splitdir splitpath tmpdir/;
 my $tmp = File::Temp::tempdir('MB-XXXXXXXX', CLEANUP => 1, DIR => File::Spec->tmpdir);
 
-use ExtUtils::Config;
+use ExtUtils::Config 0.002;
 use ExtUtils::InstallPaths;
 
 #########################
@@ -19,7 +19,7 @@ use ExtUtils::InstallPaths;
 # We do this by setting up appropriate Config entries.
 
 my @installstyle = qw(lib perl5);
-my $config = ExtUtils::Config->new(values => {
+my $config = ExtUtils::Config->new({
 	installstyle	=> catdir(@installstyle),
 
 	installprivlib  => catdir($tmp, @installstyle),
