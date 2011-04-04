@@ -31,10 +31,9 @@ for my $attribute (grep { not exists $explicit_accessors{$_} } keys %attributes)
 
 sub new {
 	my ($class, %args) = @_;
-	my $c = $args{config} || ExtUtils::Config->new;
 	my %self = (
-		config => $c,
-		(map { $_ => $args{$_} || {} } qw/install_path install_base_relpaths/),
+		config => $args{config} || ExtUtils::Config->new,
+		(map { $_ => $args{$_} || {} } qw/install_path install_base_relpaths prefix_relpaths/),
 		map { $_ => exists $args{$_} ? $args{$_} : $attributes{$_} } keys %attributes,
 	);
 	return bless \%self, $class;
@@ -104,7 +103,7 @@ sub _default_base_relpaths {
 	my $self = shift;
 	return {
 		lib     => ['lib', 'perl5'],
-		arch    => ['lib', 'perl5', $self->{config}->get('archname')],
+		arch    => ['lib', 'perl5', $self->config('archname')],
 		bin     => ['bin'],
 		script  => ['bin'],
 		bindoc  => ['man', 'man1'],
@@ -501,7 +500,7 @@ sub install_map {
 		}
 	}
 
-	warn("WARNING: Can't figure out install path for types: @skipping\nFiles will not be installed.\n") if @skipping;
+	warn "WARNING: Can't figure out install path for types: @skipping\nFiles will not be installed.\n" if @skipping;
 
 	# Write the packlist into the same place as ExtUtils::MakeMaker.
 	if ($self->create_packlist and my $module_name = $self->module_name) {
