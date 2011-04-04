@@ -538,6 +538,195 @@ sub install_map {
 	return \%map;
 }
 
-# ABSTRACT: foo
-
 1;
+
+# ABSTRACT: Build.PL install path logic made easy
+
+__END__
+
+=head1 SYNOPSIS
+
+ use ExtUtils::InstallPaths;
+ use ExtUtils::Install 'install';
+ GetOptions(\my %opt, 'install_base=s', 'install_path=s%', 'installdirs=s', 'destdir=s', 'prefix=s', 'uninst:1', 'verbose:1');
+ my $paths = ExtUtils::InstallPaths->new(%opt, module_name => $module_name);
+ install($paths->install_map, $opt{verbose}, 0, $opt{uninst});
+
+=head1 DESCRIPTION
+
+This module tries to make install path resolution as easy as possible.
+
+When you want to install a module, it needs to figure out where to install things. The nutshell version of how this works is that default installation locations are determined from L<ExtUtils::Config>, and they may be overridden by using the C<install_path> attribute. An C<install_base> attribute lets you specify an alternative installation root like F</home/foo> and C<prefix> does something similar in a rather different (and more complicated) way. C<destdir> lets you specify a temporary installation directory like F</tmp/install> in case you want to create bundled-up installable packages.
+
+The following types are supported in any circumstance.
+
+=over 4
+
+=item * lib
+
+Usually pure-Perl module files ending in F<.pm>.
+
+=item * arch
+
+"Architecture-dependent" module files, usually produced by compiling XS, L<Inline>, or similar code.
+
+=item * script
+
+Programs written in pure Perl.  In order to improve reuse, try to make these as small as possible - put the code into modules whenever possible.
+
+=item * bin
+
+"Architecture-dependent" executable programs, i.e. compiled C code or something.  Pretty rare to see this in a perl distribution, but it happens.
+
+=item * bindoc
+
+Documentation for the stuff in C<script> and C<bin>.  Usually generated from the POD in those files.  Under Unix, these are manual pages belonging to the 'man1' category.
+
+=item * libdoc
+
+Documentation for the stuff in C<lib> and C<arch>.  This is usually generated from the POD in F<.pm> files.  Under Unix, these are manual pages belonging to the 'man3' category.
+
+=item * binhtml
+
+This is the same as C<bindoc> above, but applies to HTML documents.
+
+=item * libhtml
+
+This is the same as C<bindoc> above, but applies to HTML documents.
+
+=back
+
+=method new
+
+Create a new ExtUtils::InstallPaths object. B<All attributes are valid arguments> to the contructor, as well as this:
+
+=over 4
+
+=item * config
+
+An ExtUtils::Config object that's used to configure ExtUtils::InstallPaths.
+
+=item * install_path
+
+This must be a hashref with the type as keys and the destination as values.
+
+=item * install_base_relpaths
+
+This must be a hashref with types as keys and a path relative to the install_base as value.
+
+=item * prefix_relpaths
+
+This must be a hashref any of these three keys: core, vendor, site. Each of the values mush be a hashref with types as keys and a path relative to the prefix as value. You probably want to make these three hashrefs identical.
+
+=back
+
+=method install_map()
+
+Return a map suitable for use with L<ExtUtils::Install>. B<In most cases, this is the only method you'll need>.
+
+=method install_destination($type)
+
+Returns the destination of a certain type
+
+=method install_types()
+
+Return a list of all supported install types in the current configuration.
+
+=method is_default_installable($type)
+
+Given a file type, will return true if the file type would normally be installed when neither install-base nor prefix has been set.  I.e. it will be true only if the path is set from the configuration object or set explicitly by the user via install_path.
+
+=method install_path($type [, $value])
+
+Gets or sets the install path for a certain type. Note that this overrides all other options.
+
+=method install_sets($installdirs, $type [, $path ])
+
+Get or set the path for a certain C<$type> with a certain C<$installdirs>.
+
+=method install_base_relpaths($type, $relpath)
+
+Get or set the relative paths for use with install_base for a certain type.
+
+=method prefix_relative($type)
+
+Gets the path of a certain type relative to the prefix.
+
+=method prefix_relpaths($install_dirs, $type [, $relpath])
+
+Get or set the default relative path to use in case the config install paths cannot be prefixified. You do not want to use this to get any relative path, but may require it to set it for custom types.
+
+=method original_prefix($installdirs)
+
+Get the original prefix for a certain type of $installdirs.
+
+=method config($key [, $value ])
+
+Get or set a configuration key. This should be used sparingly.
+
+=attr installdirs
+
+The default destinations for these installable things come from entries in your system's configuration. You can select from three different sets of default locations by setting the C<installdirs> parameter as follows:
+
+                          'installdirs' set to:
+                   core          site                vendor
+
+              uses the following defaults from ExtUtils::Config:
+
+  lib     => installprivlib  installsitelib      installvendorlib
+  arch    => installarchlib  installsitearch     installvendorarch
+  script  => installscript   installsitebin      installvendorbin
+  bin     => installbin      installsitebin      installvendorbin
+  bindoc  => installman1dir  installsiteman1dir  installvendorman1dir
+  libdoc  => installman3dir  installsiteman3dir  installvendorman3dir
+  binhtml => installhtml1dir installsitehtml1dir installvendorhtml1dir [*]
+  libhtml => installhtml3dir installsitehtml3dir installvendorhtml3dir [*]
+
+  * Under some OS (eg. MSWin32) the destination for HTML documents is determined by the C<Config.pm> entry C<installhtmldir>.
+
+The default value of C<installdirs> is "site".
+
+=attr install_base
+
+You can also set the whole bunch of installation paths by supplying the C<install_base> parameter to point to a directory on your system.  For instance, if you set C<install_base> to "/home/ken" on a Linux system, you'll install as follows:
+
+  lib     => /home/ken/lib/perl5
+  arch    => /home/ken/lib/perl5/i386-linux
+  script  => /home/ken/bin
+  bin     => /home/ken/bin
+  bindoc  => /home/ken/man/man1
+  libdoc  => /home/ken/man/man3
+  binhtml => /home/ken/html
+  libhtml => /home/ken/html
+
+=attr prefix
+
+This sets a prefix, identical to ExtUtils::MakeMaker's PREFIX option. This does something similar to C<install_base> in a much more complicated way.
+
+=attr verbose
+
+Sets the verbosity of ExtUtils::InstallPaths. It defaults to 0
+
+=attr blib
+
+Sets the location of the blib directory, it defaults to 'blib'.
+
+=attr create_packlist
+
+Controls whether a packlist will be added together with C<module_name>. Defaults to 1.
+
+=attr module_name
+
+The name of the current module. This is required for packlist creation. If undefined (the default)
+
+=attr destdir
+
+If you want to install everything into a temporary directory first (for instance, if you want to create a directory tree that a package manager like C<rpm> or C<dpkg> could create a package from), you can use the C<destdir> parameter. E.g. Setting C<destdir> to C<"/tmp/foo"> will effectively install to "/tmp/foo/$sitelib", "/tmp/foo/$sitearch", and the like, except that it will use C<File::Spec> to make the pathnames work correctly on whatever platform you're installing on.
+
+=head1 SEE ALSO
+
+=over 4
+
+=item * L<Build.PL spec|http://github.com/dagolden/cpan-api-buildpl/blob/master/lib/CPAN/API/BuildPL.pm>
+
+=back
