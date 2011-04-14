@@ -1,6 +1,7 @@
 Revision history for ExtUtils-InstallPaths
 
 {{$NEXT}}
+          Fixed attribution
 
 0.001     2011-04-04 15:32:56 Europe/Amsterdam
-    -
+    -     Initial version
