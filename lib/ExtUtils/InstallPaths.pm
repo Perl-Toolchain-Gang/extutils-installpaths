@@ -14,7 +14,7 @@ my %attributes = (
 	verbose         => 0,
 	blib            => 'blib',
 	create_packlist => 1,
-	module_name     => undef,
+	dist_name       => undef,
 	destdir         => undef
 );
 
@@ -503,9 +503,9 @@ sub install_map {
 	warn "WARNING: Can't figure out install path for types: @skipping\nFiles will not be installed.\n" if @skipping;
 
 	# Write the packlist into the same place as ExtUtils::MakeMaker.
-	if ($self->create_packlist and my $module_name = $self->module_name) {
+	if ($self->create_packlist and my $dist_name = $self->dist_name) {
 		my $archdir = $self->install_destination('arch');
-		my @ext = split /::/, $module_name;
+		my @ext = split /-/, $dist_name;
 		$map{write} = File::Spec->catfile($archdir, 'auto', @ext, '.packlist');
 	}
 
@@ -549,7 +549,7 @@ __END__
  use ExtUtils::InstallPaths;
  use ExtUtils::Install 'install';
  GetOptions(\my %opt, 'install_base=s', 'install_path=s%', 'installdirs=s', 'destdir=s', 'prefix=s', 'uninst:1', 'verbose:1');
- my $paths = ExtUtils::InstallPaths->new(%opt, module_name => $module_name);
+ my $paths = ExtUtils::InstallPaths->new(%opt, dist_name => $dist_name);
  install($paths->install_map, $opt{verbose}, 0, $opt{uninst});
 
 =head1 DESCRIPTION
@@ -713,9 +713,9 @@ Sets the location of the blib directory, it defaults to 'blib'.
 
 =attr create_packlist
 
-Controls whether a packlist will be added together with C<module_name>. Defaults to 1.
+Controls whether a packlist will be added together with C<dist_name>. Defaults to 1.
 
-=attr module_name
+=attr dist_name
 
 The name of the current module. This is required for packlist creation. If undefined (the default)
 
