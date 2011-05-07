@@ -41,7 +41,7 @@ my $config = ExtUtils::Config->new({
 	installsitehtml3dir => catdir($tmp, 'site', 'html'),
 });
 
-my $mb = ExtUtils::InstallPaths->new(installdirs => 'site', config => $config, module_name => 'ExtUtils::InstallPaths');
+my $mb = ExtUtils::InstallPaths->new(installdirs => 'site', config => $config, dist_name => 'ExtUtils-InstallPaths');
 isa_ok($mb, 'ExtUtils::InstallPaths');
 
 # Get us into a known state.

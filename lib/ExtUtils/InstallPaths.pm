@@ -174,6 +174,7 @@ sub installdirs {
 	my $self = shift;
 	if (@_) {
 		my $value = shift;
+		$value = 'core', Carp::carp('Perhaps you meant installdirs to be "core" rather than "perl"?') if $value eq 'perl';
 		Carp::croak('installdirs must be one of "core", "site", or "vendor"') if not $allowed_installdir{$value};
 		$self->{installdirs} = $value;
 	}
