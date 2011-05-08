@@ -1,6 +1,8 @@
 Revision history for ExtUtils-InstallPaths
 
 {{$NEXT}}
+
+0.002     2011-05-08 11:59:59 Europe/Amsterdam
           Fixed case insensitive file matching in test
           Fixed attribution
 
