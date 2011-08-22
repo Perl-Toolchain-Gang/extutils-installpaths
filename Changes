@@ -1,6 +1,8 @@
 Revision history for ExtUtils-InstallPaths
 
 {{$NEXT}}
+
+0.003     2011-08-22 16:23:30 Europe/Amsterdam
           Reinstated the module_name parameter
 
 0.002     2011-05-08 11:59:59 Europe/Amsterdam
