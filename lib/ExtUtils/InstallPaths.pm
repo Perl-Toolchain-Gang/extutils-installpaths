@@ -5,7 +5,9 @@ use warnings;
 
 use File::Spec ();
 use Carp ();
-use ExtUtils::Config;
+use ExtUtils::Config 0.002;
+
+my %explicit_accessors = map { $_ => 1 } qw/installdirs install_path install_base_relpaths prefix_relpaths/;
 
 my %attributes = (
 	installdirs     => 'site',
@@ -16,10 +18,10 @@ my %attributes = (
 	create_packlist => 1,
 	dist_name       => undef,
 	module_name     => undef,
-	destdir         => undef
+	destdir         => undef,
+	config          => sub { ExtUtils::Config->new },
+	map { ($_ => sub { {} }) } grep { $_ ne 'installdirs' } keys %explicit_accessors,
 );
-
-my %explicit_accessors = map { $_ => 1 } qw/installdirs install_path/;
 
 for my $attribute (grep { not exists $explicit_accessors{$_} } keys %attributes) {
 	no strict qw/refs/;
@@ -30,26 +32,18 @@ for my $attribute (grep { not exists $explicit_accessors{$_} } keys %attributes)
 	};
 }
 
+my $default_value = sub {
+	my $name = shift;
+	return (ref $attributes{$name} ?  return $attributes{$name}->() : $attributes{$name});
+};
+
 sub new {
 	my ($class, %args) = @_;
 	my %self = (
-		config => $args{config} || ExtUtils::Config->new,
-		(map { $_ => $args{$_} || {} } qw/install_path install_base_relpaths prefix_relpaths/),
-		map { $_ => exists $args{$_} ? $args{$_} : $attributes{$_} } keys %attributes,
+		map { $_ => exists $args{$_} ? $args{$_} : $default_value->($_) } keys %attributes,
 	);
 	$self{module_name} ||= do { my $module_name = $self{dist_name}; $module_name =~ s/-/::/g; $module_name } if defined $self{dist_name};
 	return bless \%self, $class;
-}
-
-sub config {
-	my $self = shift;
-	my $c = $self->{config};
-
-	my $key = shift;
-	return $c->get($key) unless @_;
-
-	my $val = shift;
-	return $c->set($key => $val);
 }
 
 sub _default_install_sets {
@@ -105,7 +99,7 @@ sub _default_base_relpaths {
 	my $self = shift;
 	return {
 		lib     => ['lib', 'perl5'],
-		arch    => ['lib', 'perl5', $self->config('archname')],
+		arch    => ['lib', 'perl5', $self->config->get('archname')],
 		bin     => ['bin'],
 		script  => ['bin'],
 		bindoc  => ['man', 'man1'],
@@ -400,7 +394,7 @@ sub _prefixify {
 	}
 	else {
 		my ($path_vol, $path_dirs) = File::Spec->splitpath( $path );
-		my $vms_prefix = $self->config('vms_prefix');
+		my $vms_prefix = $self->config->get('vms_prefix');
 		if ($path_vol eq $vms_prefix.':') {
 			$self->_log_verbose("  $vms_prefix: seen\n");
 
@@ -605,10 +599,6 @@ Create a new ExtUtils::InstallPaths object. B<All attributes are valid arguments
 
 =over 4
 
-=item * config
-
-An ExtUtils::Config object that's used to configure ExtUtils::InstallPaths.
-
 =item * install_path
 
 This must be a hashref with the type as keys and the destination as values.
@@ -663,10 +653,6 @@ Get or set the default relative path to use in case the config install paths can
 
 Get the original prefix for a certain type of $installdirs.
 
-=method config($key [, $value ])
-
-Get or set a configuration key. This should be used sparingly.
-
 =attr installdirs
 
 The default destinations for these installable things come from entries in your system's configuration. You can select from three different sets of default locations by setting the C<installdirs> parameter as follows:
@@ -705,6 +691,10 @@ You can also set the whole bunch of installation paths by supplying the C<instal
 =attr prefix
 
 This sets a prefix, identical to ExtUtils::MakeMaker's PREFIX option. This does something similar to C<install_base> in a much more complicated way.
+
+=attr config()
+
+Gets the L<ExtUtils::Config|ExtUtils::Config> object used for this object.
 
 =attr verbose
 

@@ -8,9 +8,9 @@ use Config;
 use File::Temp ();
 
 use File::Spec::Functions qw/catdir splitdir splitpath tmpdir/;
-my $tmp = File::Temp::tempdir('MB-XXXXXXXX', CLEANUP => 1, DIR => File::Spec->tmpdir);
+my $tmp = File::Temp::tempdir('EIP-XXXXXXXX', CLEANUP => 1, DIR => File::Spec->tmpdir);
 
-use ExtUtils::Config 0.002;
+use ExtUtils::Config;
 use ExtUtils::InstallPaths;
 
 #########################
@@ -245,10 +245,10 @@ $mb->prefix(undef);
 		$test_config{$type} = catdir(File::Spec->rootdir, @$prefix, @{$defaults->{$type}});
 	}
 
-	# Poke at the innards of MB to change the default install locations.
+	# Poke at the innards of E::IP to change the default install locations.
 	my $old =  $mb->install_sets->{site};
 	$mb->install_sets->{site} = \%test_config;
-	$mb->config(siteprefixexp => catdir(File::Spec->rootdir, 'wierd', 'prefix'));
+	$mb->config->set(siteprefixexp => catdir(File::Spec->rootdir, 'wierd', 'prefix'));
 
 	my $prefix = catdir('another', 'prefix');
 	$mb->prefix($prefix);

@@ -1,6 +1,7 @@
 Revision history for ExtUtils-InstallPaths
 
 {{$NEXT}}
+          Sanatized the config method
 
 0.003     2011-08-22 16:23:30 Europe/Amsterdam
           Reinstated the module_name parameter
