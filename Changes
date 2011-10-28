@@ -1,6 +1,8 @@
 Revision history for ExtUtils-InstallPaths
 
 {{$NEXT}}
+
+0.004     2011-10-29 00:49:21 Europe/Amsterdam
           Sanatized the config method
 
 0.003     2011-08-22 16:23:30 Europe/Amsterdam
