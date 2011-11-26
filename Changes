@@ -1,6 +1,7 @@
 Revision history for ExtUtils-InstallPaths
 
 {{$NEXT}}
+          Don't return references to internal state
 
 0.004     2011-10-29 00:49:21 Europe/Amsterdam
           Sanatized the config method
