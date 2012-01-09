@@ -1,6 +1,8 @@
 Revision history for ExtUtils-InstallPaths
 
 {{$NEXT}}
+
+0.005     2012-01-09 23:34:16 Europe/Amsterdam
           Don't return references to internal state
 
 0.004     2011-10-29 00:49:21 Europe/Amsterdam
