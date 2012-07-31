@@ -7,7 +7,7 @@ use File::Spec ();
 use Carp ();
 use ExtUtils::Config 0.002;
 
-my %explicit_accessors = map { $_ => 1 } qw/installdirs install_path install_base_relpaths prefix_relpaths/;
+my %explicit_accessors = map { $_ => 1 } qw/installdirs install_path install_base_relpaths prefix_relpaths original_prefix install_sets/;
 
 my %attributes = (
 	installdirs     => 'site',
@@ -603,6 +603,14 @@ This must be a hashref with types as keys and a path relative to the install_bas
 =item * prefix_relpaths
 
 This must be a hashref any of these three keys: core, vendor, site. Each of the values mush be a hashref with types as keys and a path relative to the prefix as value. You probably want to make these three hashrefs identical.
+
+=item * original_prefix
+
+This must be a hashref with the legal installdirs values as keys and the prefix directories as values.
+
+=item * install_sets
+
+This mush be a hashref with the legal installdirs are keys, and the values being hashrefs with types as keys and locations as values.
 
 =back
 

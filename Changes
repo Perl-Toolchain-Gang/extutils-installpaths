@@ -1,6 +1,7 @@
 Revision history for ExtUtils-InstallPaths
 
 {{$NEXT}}
+          Add original_prefix and install_sets
 
 0.005     2012-01-09 23:34:16 Europe/Amsterdam
           Don't return references to internal state
