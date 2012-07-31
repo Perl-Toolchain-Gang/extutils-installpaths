@@ -291,7 +291,7 @@ sub install_base_relpaths {
 		$self->_set_relpaths($self->{install_base_relpaths}, @_);
 	}
 	my $map = $self->_merge_arglist($self->{install_base_relpaths}, $self->_default_base_relpaths);
-	return { %{$map} } unless @_;
+	return $map unless @_;
 	my $relpath = $map->{$_[0]};
 	return defined $relpath ? File::Spec->catdir( @$relpath ) : undef;
 }
@@ -307,7 +307,7 @@ sub prefix_relpaths {
 		$self->_set_relpaths($self->{prefix_relpaths}{$installdirs}, @_);
 	}
 	my $map = $self->_merge_arglist($self->{prefix_relpaths}{$installdirs}, $self->_default_prefix_relpaths->{$installdirs});
-	return { %{$map} } unless @_;
+	return $map unless @_;
 	my $relpath = $map->{$_[0]};
 	return defined $relpath ? File::Spec->catdir( @$relpath ) : undef;
 }
@@ -417,7 +417,7 @@ sub original_prefix {
 		$self->{original_prefix}{$key} = $value;
 	}
 	my $map = $self->_merge_arglist($self->{original_prefix}, $self->_default_original_prefix);
-	return { %{$map} } unless defined $key;
+	return $map unless defined $key;
 	return $map->{$key}
 }
 
