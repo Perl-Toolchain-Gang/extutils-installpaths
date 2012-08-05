@@ -1,6 +1,8 @@
 Revision history for ExtUtils-InstallPaths
 
 {{$NEXT}}
+
+0.006     2012-08-05 20:28:27 Europe/Bucharest
           Add original_prefix and install_sets
           Various documentation improvements
 
