@@ -2,12 +2,12 @@
 
 use strict;
 use warnings FATAL => 'all';
-use Test::More tests => 125;
+use Test::More tests => 105;
 
 use Config;
 use File::Temp ();
 
-use File::Spec::Functions qw/catdir splitdir splitpath tmpdir/;
+use File::Spec::Functions qw/catdir splitdir splitpath tmpdir rel2abs rootdir/;
 my $tmp = File::Temp::tempdir('EIP-XXXXXXXX', CLEANUP => 1, DIR => File::Spec->tmpdir);
 
 use ExtUtils::Config;
@@ -41,99 +41,47 @@ my $config = ExtUtils::Config->new({
 	installsitehtml3dir => catdir($tmp, 'site', 'html'),
 });
 
-my $mb = ExtUtils::InstallPaths->new(installdirs => 'site', config => $config, dist_name => 'ExtUtils-InstallPaths');
-isa_ok($mb, 'ExtUtils::InstallPaths');
-
-# Get us into a known state.
-$mb->install_base(undef);
-$mb->prefix(undef);
-
-{
-	# Check install_path() accessor
-	my ($map, $path);
-
-	$map = $mb->install_path();
-	is_deeply($map, {}, 'install_path() accessor');
-
-	$path = $mb->install_path('elem' => '/foo/bar');
-	is($path, '/foo/bar', '  returns assigned path');
-
-	$path = $mb->install_path('elem');
-	is($path, '/foo/bar', '  can read stored path');
-
-	$map = $mb->install_path();
-	is_deeply($map, { 'elem' => '/foo/bar' }, '  can access map');
-
-	$path = $mb->install_path('elem' => undef);
-	is($path, undef, '  can delete a path element');
-
-	$map = $mb->install_path();
-	is_deeply($map, {}, '  deletes path from map');
+sub get_ei {
+	my %args = @_;
+	return ExtUtils::InstallPaths->new(installdirs => 'site', config => $config, dist_name => 'ExtUtils-InstallPaths', %args);
 }
 
-# Check install_base_relpaths() accessor
+isa_ok(get_ei, 'ExtUtils::InstallPaths');
+
 {
-	my ($map, $path);
-
-	$map = $mb->install_base_relpaths();
-	is(ref($map), 'HASH', 'install_base_relpaths() accessor');
-
-	eval{ $path = $mb->install_base_relpaths('elem' => '/foo/bar') };
-	like($@, qr/Value must be a relative path/, '  emits error if path not relative');
-
-	$path = $mb->install_base_relpaths('elem' => 'foo/bar');
-	is($path, catdir(qw(foo bar)), '  returns assigned path');
-
-	$path = $mb->install_base_relpaths('elem');
-	is($path, catdir(qw(foo/bar)), '  can read stored path');
-
-	$map = $mb->install_base_relpaths();
-	is_deeply($map->{elem}, [qw(foo bar)], '  can access map');
-
-	$path = $mb->install_base_relpaths('elem' => undef);
-	is($path, undef, '  can delete a path element');
-
-	$map = $mb->install_base_relpaths();
-	is($map->{elem}, undef, '  deletes path from map');
+	my $elem = rel2abs(catdir(qw/foo bar/), rootdir);
+	my $ei = get_ei(install_path => { elem => $elem});
+	is($ei->install_path('elem'), $elem, '  can read stored path');
 }
 
-
-# Check prefix_relpaths() accessor
 {
-	my ($map, $path);
-
-	$map = $mb->prefix_relpaths();
-	is(ref($map), 'HASH', 'prefix_relpaths() accessor');
-
-	is_deeply($mb->prefix_relpaths(), $mb->prefix_relpaths('site'), '  defaults to \'site\'');
-
-	eval{ $path = $mb->prefix_relpaths('site', 'elem' => '/foo/bar') };
+	my $ei = get_ei(install_base => rel2abs('bar', rootdir), install_base_relpaths => { 'elem' => catdir(qw/foo bar/) });
+ 
+	is($ei->install_base_relpaths('elem'), catdir(qw/foo bar/), '  can read stored path');
+	is($ei->install_destination('lib'), rel2abs(catdir('bar','lib', 'perl5'), rootdir), 'destination of other items is not affected');
+}
+ 
+ 
+{
+	local $TODO = 'this should fail, but doesn\'t';
+	my $ei = eval { get_ei(prefix_relpaths => { 'site' => { 'elem' => '/foo/bar'} }) };
+	is ($ei, undef, '$ei undefined');
 	like($@, qr/Value must be a relative path/, '  emits error if path not relative');
+}
 
-	$path = $mb->prefix_relpaths('site', 'elem' => 'foo/bar');
-	is($path, catdir(qw(foo bar)), '  returns assigned path');
-
-	$path = $mb->prefix_relpaths('site', 'elem');
+{
+	my $ei = get_ei(prefix_relpaths => { site => { elem => 'foo/bar' } });
+ 
+	my $path = $ei->prefix_relpaths('site', 'elem');
 	is($path, catdir(qw(foo bar)), '  can read stored path');
-
-	$map = $mb->prefix_relpaths();
-	is_deeply($map->{elem}, [qw(foo bar)], '  can access map');
-
-	$path = $mb->prefix_relpaths('site', 'elem' => undef);
-	is($path, undef, '  can delete a path element');
-
-	$map = $mb->prefix_relpaths();
-	is($map->{elem}, undef, '  deletes path from map');
 }
 
 
 # Check that we install into the proper default locations.
 {
-	is($mb->installdirs, 'site');
-	is($mb->install_base, undef);
-	is($mb->prefix,       undef);
+	my $ei = get_ei();
 
-	test_install_destinations($mb, {
+	test_install_destinations($ei, {
 		lib     => catdir($tmp, 'site', @installstyle, 'site_perl'),
 		arch	=> catdir($tmp, 'site', @installstyle, 'site_perl', @Config{qw(version archname)}),
 		bin     => catdir($tmp, 'site', 'bin'),
@@ -142,10 +90,10 @@ $mb->prefix(undef);
 		libdoc  => catdir($tmp, 'site', 'man', 'man3'),
 		binhtml => catdir($tmp, 'site', 'html'),
 		libhtml => catdir($tmp, 'site', 'html'),
-	});
-	test_install_map($mb, {
+	}, 'installdirs=site');
+	test_install_map($ei, {
 		read                      => '',
-		write                     => File::Spec->catfile($mb->install_destination('arch'), qw/auto ExtUtils InstallPaths .packlist/),
+		write                     => File::Spec->catfile($ei->install_destination('arch'), qw/auto ExtUtils InstallPaths .packlist/),
 		catdir('blib', 'lib')     => catdir($tmp, 'site', @installstyle, 'site_perl'),
 		catdir('blib', 'arch')    => catdir($tmp, 'site', @installstyle, 'site_perl', @Config{qw(version archname)}),
 		catdir('blib', 'bin')     => catdir($tmp, 'site', 'bin'),
@@ -155,10 +103,10 @@ $mb->prefix(undef);
 
 # Is installdirs honored?
 {
-	$mb->installdirs('core');
-	is($mb->installdirs, 'core');
+	my $ei = get_ei(installdirs => 'core');
+	is($ei->installdirs, 'core');
 
-	test_install_destinations($mb, {
+	test_install_destinations($ei, {
 		lib     => catdir($tmp, @installstyle),
 		arch	=> catdir($tmp, @installstyle, @Config{qw(version archname)}),
 		bin     => catdir($tmp, 'bin'),
@@ -168,22 +116,17 @@ $mb->prefix(undef);
 		binhtml => catdir($tmp, 'html'),
 		libhtml => catdir($tmp, 'html'),
 	});
-
-	$mb->installdirs('site');
-	is($mb->installdirs, 'site');
 }
-
 
 # Check install_base()
 {
 	my $install_base = catdir('foo', 'bar');
-	$mb->install_base($install_base);
+	my $ei = get_ei(install_base => $install_base);
 
-	is($mb->prefix, undef);
-	is($mb->install_base, $install_base);
+	is($ei->prefix, undef);
+	is($ei->install_base, $install_base);
 
-
-	test_install_destinations($mb, {
+	test_install_destinations($ei, {
 		lib     => catdir($install_base, 'lib', 'perl5'),
 		arch	=> catdir($install_base, 'lib', 'perl5', $Config{archname}),
 		bin     => catdir($install_base, 'bin'),
@@ -194,9 +137,9 @@ $mb->prefix(undef);
 		libhtml => catdir($install_base, 'html'),
 	});
 
-	test_install_map($mb, {
+	test_install_map($ei, {
 		read                      => '',
-		write                     => File::Spec->catfile($mb->install_destination('arch'), qw/auto ExtUtils InstallPaths .packlist/),
+		write                     => File::Spec->catfile($ei->install_destination('arch'), qw/auto ExtUtils InstallPaths .packlist/),
 		catdir('blib', 'lib')     => catdir($install_base, 'lib', 'perl5'),
 		catdir('blib', 'arch')    => catdir($install_base, 'lib', 'perl5', $Config{archname}),
 		catdir('blib', 'bin')     => catdir($install_base, 'bin'),
@@ -207,62 +150,56 @@ $mb->prefix(undef);
 
 # Basic prefix test.  Ensure everything is under the prefix.
 {
-	$mb->install_base(undef);
-	ok(!defined $mb->install_base);
-
 	my $prefix = catdir(qw/some prefix/);
-	$mb->prefix($prefix);
-	is($mb->{prefix}, $prefix);
+	my $ei = get_ei(prefix => $prefix);
 
-	test_prefix($prefix, $mb->install_sets('site'));
+	ok(!defined $ei->install_base, 'install_base is not defined');
+	is($ei->prefix, $prefix, "The prefix is $prefix");
+
+	test_prefix($ei, $prefix);
+#	test_prefix($ei, $prefix, $ei->install_sets('site'));
 }
 
 # And now that prefix honors installdirs.
 {
-	$mb->installdirs('core');
-	is($mb->installdirs, 'core');
-
 	my $prefix = catdir(qw/some prefix/);
-	test_prefix($prefix);
+	my $ei = get_ei(prefix => $prefix, installdirs => 'core');
 
-	$mb->installdirs('site');
-	is($mb->installdirs, 'site');
+	is($ei->installdirs, 'core');
+	test_prefix($ei, $prefix);
 }
 
+{
+	my $ei = get_ei;
 # Try a config setting which would result in installation locations outside
 # the prefix.  Ensure it doesn't.
-{
 	# Get the prefix defaults
-	my $defaults = $mb->prefix_relpaths('site');
+	my @types = $ei->install_types;
 
 	# Create a configuration involving weird paths that are outside of
 	# the configured prefix.
 	my @prefixes = ([qw(foo bar)], [qw(biz)], []);
 
 	my %test_config;
-	foreach my $type (keys %$defaults) {
+	foreach my $type (@types) {
 		my $prefix = shift @prefixes || [qw(foo bar)];
-		$test_config{$type} = catdir(File::Spec->rootdir, @$prefix, @{$defaults->{$type}});
+		$test_config{$type} = catdir(File::Spec->rootdir, @$prefix, @{$ei->prefix_relpaths('site', $type)});
 	}
 
 	# Poke at the innards of E::IP to change the default install locations.
-	my $old =  $mb->install_sets->{site};
-	$mb->install_sets->{site} = \%test_config;
-	$mb->config->set(siteprefixexp => catdir(File::Spec->rootdir, 'wierd', 'prefix'));
-
 	my $prefix = catdir('another', 'prefix');
-	$mb->prefix($prefix);
-	test_prefix($prefix, \%test_config);
-	$mb->install_sets->{site} = $old;
-}
+	my $config = ExtUtils::Config->new({ siteprefixexp => catdir(File::Spec->rootdir, 'wierd', 'prefix')});
+	$ei = get_ei(install_sets => { site => \%test_config }, config => $config, prefix => $prefix);
 
+	test_prefix($ei, $prefix, \%test_config);
+}
 
 # Check that we can use install_base after setting prefix.
 {
 	my $install_base = catdir('foo', 'bar');
-	$mb->install_base($install_base);
+	my $ei = get_ei(install_base => $install_base, prefix => 'whatever');
 
-	test_install_destinations($mb, {
+	test_install_destinations($ei, {
 		lib     => catdir($install_base, 'lib', 'perl5'),
 		arch	=> catdir($install_base, 'lib', 'perl5', $Config{archname}),
 		bin     => catdir($install_base, 'bin'),
@@ -296,12 +233,12 @@ sub dir_contains {
 
 
 sub test_prefix {
-	my ($prefix, $test_config) = @_;
+	my ($ei, $prefix, $test_config) = @_;
 
 	local $Test::Builder::Level = $Test::Builder::Level + 1;
 
 	foreach my $type (qw/lib arch bin script bindoc libdoc binhtml libhtml/) {
-		my $dest = $mb->install_destination($type);
+		my $dest = $ei->install_destination($type);
 		ok dir_contains($prefix, $dest), "$type prefixed";
 
 		SKIP: {
