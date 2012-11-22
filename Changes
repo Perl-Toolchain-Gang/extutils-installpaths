@@ -1,6 +1,8 @@
 Revision history for ExtUtils-InstallPaths
 
 {{$NEXT}}
+
+0.007     2012-11-22 21:00:18 Europe/Amsterdam
           Refactor everything into sanity
 
 0.006     2012-08-05 20:28:27 Europe/Bucharest
