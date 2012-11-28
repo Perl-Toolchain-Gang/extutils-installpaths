@@ -7,7 +7,7 @@ use Test::More tests => 105;
 use Config;
 use File::Temp ();
 
-use File::Spec::Functions qw/catdir splitdir splitpath tmpdir rel2abs rootdir/;
+use File::Spec::Functions qw/catdir splitdir splitpath tmpdir rootdir/;
 my $tmp = File::Temp::tempdir('EIP-XXXXXXXX', CLEANUP => 1, DIR => File::Spec->tmpdir);
 
 use ExtUtils::Config;
@@ -49,28 +49,28 @@ sub get_ei {
 isa_ok(get_ei, 'ExtUtils::InstallPaths');
 
 {
-	my $elem = rel2abs(catdir(qw/foo bar/), rootdir);
+	my $elem = catdir(rootdir, qw/foo bar/);
 	my $ei = get_ei(install_path => { elem => $elem});
 	is($ei->install_path('elem'), $elem, '  can read stored path');
 }
 
 {
-	my $ei = get_ei(install_base => rel2abs('bar', rootdir), install_base_relpaths => { 'elem' => catdir(qw/foo bar/) });
+	my $ei = get_ei(install_base => catdir(rootdir, 'bar'), install_base_relpaths => { 'elem' => catdir(qw/foo bar/) });
  
 	is($ei->install_base_relpaths('elem'), catdir(qw/foo bar/), '  can read stored path');
-	is($ei->install_destination('lib'), rel2abs(catdir('bar','lib', 'perl5'), rootdir), 'destination of other items is not affected');
+	is($ei->install_destination('lib'), catdir(rootdir, qw/bar lib perl5/), 'destination of other items is not affected');
 }
  
  
 {
 	local $TODO = 'this should fail, but doesn\'t';
-	my $ei = eval { get_ei(prefix_relpaths => { 'site' => { 'elem' => '/foo/bar'} }) };
+	my $ei = eval { get_ei(prefix_relpaths => { 'site' => { 'elem' => catdir(rootdir, qw/foo bar/)} }) };
 	is ($ei, undef, '$ei undefined');
 	like($@, qr/Value must be a relative path/, '  emits error if path not relative');
 }
 
 {
-	my $ei = get_ei(prefix_relpaths => { site => { elem => 'foo/bar' } });
+	my $ei = get_ei(prefix_relpaths => { site => { elem => catdir(qw/foo bar/) } });
  
 	my $path = $ei->prefix_relpaths('site', 'elem');
 	is($path, catdir(qw(foo bar)), '  can read stored path');
