@@ -7,8 +7,8 @@ use Test::More tests => 105;
 use Config;
 use File::Temp ();
 
-use File::Spec::Functions qw/catdir splitdir splitpath tmpdir rootdir/;
-my $tmp = File::Temp::tempdir('EIP-XXXXXXXX', CLEANUP => 1, DIR => File::Spec->tmpdir);
+use File::Spec::Functions ':ALL';
+my $tmp = File::Temp::tempdir('EIP-XXXXXXXX', CLEANUP => 1, DIR => tmpdir);
 
 use ExtUtils::Config;
 use ExtUtils::InstallPaths;
@@ -93,7 +93,7 @@ isa_ok(get_ei, 'ExtUtils::InstallPaths');
 	}, 'installdirs=site');
 	test_install_map($ei, {
 		read                      => '',
-		write                     => File::Spec->catfile($ei->install_destination('arch'), qw/auto ExtUtils InstallPaths .packlist/),
+		write                     => catfile($ei->install_destination('arch'), qw/auto ExtUtils InstallPaths .packlist/),
 		catdir('blib', 'lib')     => catdir($tmp, 'site', @installstyle, 'site_perl'),
 		catdir('blib', 'arch')    => catdir($tmp, 'site', @installstyle, 'site_perl', @Config{qw(version archname)}),
 		catdir('blib', 'bin')     => catdir($tmp, 'site', 'bin'),
@@ -139,7 +139,7 @@ isa_ok(get_ei, 'ExtUtils::InstallPaths');
 
 	test_install_map($ei, {
 		read                      => '',
-		write                     => File::Spec->catfile($ei->install_destination('arch'), qw/auto ExtUtils InstallPaths .packlist/),
+		write                     => catfile($ei->install_destination('arch'), qw/auto ExtUtils InstallPaths .packlist/),
 		catdir('blib', 'lib')     => catdir($install_base, 'lib', 'perl5'),
 		catdir('blib', 'arch')    => catdir($install_base, 'lib', 'perl5', $Config{archname}),
 		catdir('blib', 'bin')     => catdir($install_base, 'bin'),
@@ -183,12 +183,12 @@ isa_ok(get_ei, 'ExtUtils::InstallPaths');
 	my %test_config;
 	foreach my $type (@types) {
 		my $prefix = shift @prefixes || [qw(foo bar)];
-		$test_config{$type} = catdir(File::Spec->rootdir, @$prefix, @{$ei->prefix_relpaths('site', $type)});
+		$test_config{$type} = catdir(rootdir, @$prefix, @{$ei->prefix_relpaths('site', $type)});
 	}
 
 	# Poke at the innards of E::IP to change the default install locations.
 	my $prefix = catdir('another', 'prefix');
-	my $config = ExtUtils::Config->new({ siteprefixexp => catdir(File::Spec->rootdir, 'wierd', 'prefix')});
+	my $config = ExtUtils::Config->new({ siteprefixexp => catdir(rootdir, 'wierd', 'prefix')});
 	$ei = get_ei(install_sets => { site => \%test_config }, config => $config, prefix => $prefix);
 
 	test_prefix($ei, $prefix, \%test_config);
@@ -216,13 +216,13 @@ sub dir_contains {
 	# File::Spec doesn't have an easy way to check whether one directory
 	# is inside another, unfortunately.
 
-	($first, $second) = map { File::Spec->canonpath($_) } ($first, $second);
-	my @first_dirs = File::Spec->splitdir($first);
-	my @second_dirs = File::Spec->splitdir($second);
+	($first, $second) = map { canonpath($_) } ($first, $second);
+	my @first_dirs = splitdir($first);
+	my @second_dirs = splitdir($second);
 
 	return 0 if @second_dirs < @first_dirs;
 
-	my $is_same = ( File::Spec->case_tolerant ? sub { lc(shift()) eq lc(shift()) } : sub { shift() eq shift() });
+	my $is_same = ( case_tolerant() ? sub { lc(shift()) eq lc(shift()) } : sub { shift() eq shift() });
 
 	while (@first_dirs) {
 		return 0 unless $is_same->(shift @first_dirs, shift @second_dirs);
