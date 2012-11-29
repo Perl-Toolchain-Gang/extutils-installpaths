@@ -22,10 +22,10 @@ my %defaults = (
 	module_name     => undef,
 	destdir         => undef,
 	install_path    => sub { {} },
-	install_sets    => sub { _default_install_sets($_[0]) },
-	original_prefix => sub { _default_original_prefix($_[0]) },
-	install_base_relpaths => sub { _default_base_relpaths($_[0]) },
-	prefix_relpaths => sub { _default_prefix_relpaths($_[0]) },
+	install_sets    => \&_default_install_sets,
+	original_prefix => \&_default_original_prefix,
+	install_base_relpaths => \&_default_base_relpaths,
+	prefix_relpaths => \&_default_prefix_relpaths,
 );
 
 sub _merger {
