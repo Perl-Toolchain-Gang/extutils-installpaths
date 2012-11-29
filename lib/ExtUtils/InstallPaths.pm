@@ -28,29 +28,23 @@ my %defaults = (
 	prefix_relpaths => \&_default_prefix_relpaths,
 );
 
-sub _merger {
+sub _merge_shallow {
 	my $name = shift;
 	return sub {
 		my ($override, $config) = @_;
 		my $defaults = $defaults{$name}->($config);
-
-		my %new_opts = %$override;
-		while (my ($key, $val) = each %$defaults) {
-			if (exists $override->{$key}) {
-				if (ref($val) eq 'HASH') {
-					while (my ($k, $v) = each %$val) {
-					   $new_opts{$key}{$k} = $v unless exists $override->{$key}{$k};
-					}
-				}
-			} else {
-				$new_opts{$key} = $val
-			}
-		}
-
-		return \%new_opts;
+		return { %$defaults, %$override };
 	}
 }
 
+sub _merge_deep {
+	my $name = shift;
+	return sub {
+		my ($override, $config) = @_;
+		my $defaults = $defaults{$name}->($config);
+		return { map { $_ => { %{ $defaults->{$_} }, %{ $override->{$_} || {} } } } keys %$defaults };
+	}
+}
 
 my %allowed_installdir = map { $_ => 1 } qw/core site vendor/;
 my %filter = (
@@ -60,7 +54,8 @@ my %filter = (
 		Carp::croak('installdirs must be one of "core", "site", or "vendor"') if not $allowed_installdir{$value};
 		return $value;
 	},
-	map { $_ => _merger($_) } qw/install_sets original_prefix install_base_relpaths prefix_relpaths/,
+	(map { $_ => _merge_shallow($_) } qw/original_prefix install_base_relpaths/),
+	(map { $_ => _merge_deep($_) } qw/install_sets prefix_relpaths/),
 );
 
 for my $attribute (keys %defaults) {
