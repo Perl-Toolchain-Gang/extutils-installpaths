@@ -1,6 +1,8 @@
 Revision history for ExtUtils-InstallPaths
 
 {{$NEXT}}
+
+0.008     2012-11-29 21:13:50 Europe/Amsterdam
           Don't require ExtUtils::Config object
           Fix portability issues in test paths
 
