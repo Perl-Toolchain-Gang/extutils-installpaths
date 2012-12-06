@@ -63,7 +63,6 @@ isa_ok(get_ei, 'ExtUtils::InstallPaths');
  
  
 {
-	local $TODO = 'this should fail, but doesn\'t';
 	my $ei = eval { get_ei(prefix_relpaths => { 'site' => { 'elem' => catdir(rootdir, qw/foo bar/)} }) };
 	is ($ei, undef, '$ei undefined');
 	like($@, qr/Value must be a relative path/, '  emits error if path not relative');
