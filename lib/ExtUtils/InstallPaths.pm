@@ -1,6 +1,6 @@
 package ExtUtils::InstallPaths;
 
-use 5.006;
+use 5.008001;
 use strict;
 use warnings;
 
@@ -102,42 +102,36 @@ sub new {
 sub _default_install_sets {
 	my $c = shift;
 
-	my $bindoc  = $c->get('installman1dir');
-	my $libdoc  = $c->get('installman3dir');
-
-	my $binhtml = $c->get('installhtml1dir') || $c->get('installhtmldir');
-	my $libhtml = $c->get('installhtml3dir') || $c->get('installhtmldir');
-
 	return {
 		core   => {
 			lib     => $c->get('installprivlib'),
 			arch    => $c->get('installarchlib'),
 			bin     => $c->get('installbin'),
 			script  => $c->get('installscript'),
-			bindoc  => $bindoc,
-			libdoc  => $libdoc,
-			binhtml => $binhtml,
-			libhtml => $libhtml,
+			bindoc  => $c->get('installman1dir'),
+			libdoc  => $c->get('installman3dir'),
+			binhtml => $c->get('installhtml1dir'),
+			libhtml => $c->get('installhtml3dir'),
 		},
 		site   => {
 			lib     => $c->get('installsitelib'),
 			arch    => $c->get('installsitearch'),
-			bin     => $c->get('installsitebin') || $c->get('installbin'),
-			script  => $c->get('installsitescript') || $c->get('installsitebin') || $c->get('installscript'),
-			bindoc  => $c->get('installsiteman1dir') || $bindoc,
-			libdoc  => $c->get('installsiteman3dir') || $libdoc,
-			binhtml => $c->get('installsitehtml1dir') || $binhtml,
-			libhtml => $c->get('installsitehtml3dir') || $libhtml,
+			bin     => $c->get('installsitebin'),
+			script  => $c->get('installsitescript'),
+			bindoc  => $c->get('installsiteman1dir'),
+			libdoc  => $c->get('installsiteman3dir'),
+			binhtml => $c->get('installsitehtml1dir'),
+			libhtml => $c->get('installsitehtml3dir'),
 		},
 		vendor => {
 			lib     => $c->get('installvendorlib'),
 			arch    => $c->get('installvendorarch'),
-			bin     => $c->get('installvendorbin') || $c->get('installbin'),
-			script  => $c->get('installvendorscript') || $c->get('installvendorbin') || $c->get('installscript'),
-			bindoc  => $c->get('installvendorman1dir') || $bindoc,
-			libdoc  => $c->get('installvendorman3dir') || $libdoc,
-			binhtml => $c->get('installvendorhtml1dir') || $binhtml,
-			libhtml => $c->get('installvendorhtml3dir') || $libhtml,
+			bin     => $c->get('installvendorbin'),
+			script  => $c->get('installvendorscript'),
+			bindoc  => $c->get('installvendorman1dir'),
+			libdoc  => $c->get('installvendorman3dir'),
+			binhtml => $c->get('installvendorhtml1dir'),
+			libhtml => $c->get('installvendorhtml3dir'),
 		},
 	};
 }
@@ -201,11 +195,10 @@ sub _default_original_prefix {
 	my $c = shift;
 
 	my %ret = (
-		core   => $c->get('installprefixexp') || $c->get('installprefix') || $c->get('prefixexp') || $c->get('prefix') || '',
+		core   => $c->get('installprefixexp'),
 		site   => $c->get('siteprefixexp'),
 		vendor => $c->get('usevendorprefix') ? $c->get('vendorprefixexp') : '',
 	);
-	$ret{site} ||= $ret{core};
 
 	return \%ret;
 }

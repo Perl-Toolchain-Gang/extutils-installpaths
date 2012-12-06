@@ -1,6 +1,7 @@
 Revision history for ExtUtils-InstallPaths
 
 {{$NEXT}}
+          Deprecated usage of legacy configuration variables
 
 0.009     2012-12-07 00:04:52 Europe/Amsterdam
           Add relative path checkers to relpaths arguments
