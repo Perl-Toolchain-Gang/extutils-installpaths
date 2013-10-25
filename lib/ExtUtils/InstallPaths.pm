@@ -99,41 +99,22 @@ sub new {
 	return bless \%self, $class;
 }
 
+my @install_sets_keys = qw/lib arch bin script bindoc libdoc binhtml libhtml/;
+my @install_sets_tail = qw/bin script man1dir man3dir html1dir html3dir/;
+my %install_sets_values = (
+	core   => [ qw/privlib archlib /, @install_sets_tail ],
+	site   => [ map { "site$_" } qw/lib arch/, @install_sets_tail ],
+	vendor => [ map { "vendor$_" } qw/lib arch/, @install_sets_tail ],
+);
+
 sub _default_install_sets {
 	my $c = shift;
 
-	return {
-		core   => {
-			lib     => $c->get('installprivlib'),
-			arch    => $c->get('installarchlib'),
-			bin     => $c->get('installbin'),
-			script  => $c->get('installscript'),
-			bindoc  => $c->get('installman1dir'),
-			libdoc  => $c->get('installman3dir'),
-			binhtml => $c->get('installhtml1dir'),
-			libhtml => $c->get('installhtml3dir'),
-		},
-		site   => {
-			lib     => $c->get('installsitelib'),
-			arch    => $c->get('installsitearch'),
-			bin     => $c->get('installsitebin'),
-			script  => $c->get('installsitescript'),
-			bindoc  => $c->get('installsiteman1dir'),
-			libdoc  => $c->get('installsiteman3dir'),
-			binhtml => $c->get('installsitehtml1dir'),
-			libhtml => $c->get('installsitehtml3dir'),
-		},
-		vendor => {
-			lib     => $c->get('installvendorlib'),
-			arch    => $c->get('installvendorarch'),
-			bin     => $c->get('installvendorbin'),
-			script  => $c->get('installvendorscript'),
-			bindoc  => $c->get('installvendorman1dir'),
-			libdoc  => $c->get('installvendorman3dir'),
-			binhtml => $c->get('installvendorhtml1dir'),
-			libhtml => $c->get('installvendorhtml3dir'),
-		},
-	};
+	my %ret;
+	for my $installdir (qw/core site vendor/) {
+		@{$ret{$installdir}}{@install_sets_keys} = map { $c->get("install$_") } @{ $install_sets_values{$installdir} };
+	}
+	return \%ret;
 }
 
 sub _default_base_relpaths {
@@ -150,6 +131,15 @@ sub _default_base_relpaths {
 	};
 }
 
+my %common_prefix_relpaths = (
+	bin        => ['bin'],
+	script     => ['bin'],
+	bindoc     => ['man', 'man1'],
+	libdoc     => ['man', 'man3'],
+	binhtml    => ['html'],
+	libhtml    => ['html'],
+);
+
 sub _default_prefix_relpaths {
 	my $c = shift;
 
@@ -161,32 +151,17 @@ sub _default_prefix_relpaths {
 		core => {
 			lib        => [@libstyle],
 			arch       => [@libstyle, $version, $arch],
-			bin        => ['bin'],
-			script     => ['bin'],
-			bindoc     => ['man', 'man1'],
-			libdoc     => ['man', 'man3'],
-			binhtml    => ['html'],
-			libhtml    => ['html'],
+			%common_prefix_relpaths,
 		},
 		vendor => {
 			lib        => [@libstyle],
 			arch       => [@libstyle, $version, $arch],
-			bin        => ['bin'],
-			script     => ['bin'],
-			bindoc     => ['man', 'man1'],
-			libdoc     => ['man', 'man3'],
-			binhtml    => ['html'],
-			libhtml    => ['html'],
+			%common_prefix_relpaths,
 		},
 		site => {
 			lib        => [@libstyle, 'site_perl'],
 			arch       => [@libstyle, 'site_perl', $version, $arch],
-			bin        => ['bin'],
-			script     => ['bin'],
-			bindoc     => ['man', 'man1'],
-			libdoc     => ['man', 'man3'],
-			binhtml    => ['html'],
-			libhtml    => ['html'],
+			%common_prefix_relpaths,
 		},
 	};
 }
