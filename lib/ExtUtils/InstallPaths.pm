@@ -195,8 +195,6 @@ sub is_default_installable {
 	return $installable ? 1 : 0;
 }
 
-#Carp::croak('Value must be a relative path') if File::Spec::Unix->file_name_is_absolute($value);
-
 sub _prefixify_default {
 	my $self = shift;
 	my $type = shift;
