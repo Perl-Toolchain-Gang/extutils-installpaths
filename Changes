@@ -1,6 +1,8 @@
 Revision history for ExtUtils-InstallPaths
 
 {{$NEXT}}
+
+0.010     2013-10-29 12:17:18 Europe/Amsterdam
           Deprecated usage of legacy configuration variables
           Generate default paths more dynamically
 
