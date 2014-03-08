@@ -67,6 +67,17 @@ my %filter = (
 	(map { $_ => _merge_deep($_, $deep_filter{$_}) } qw/install_sets prefix_relpaths/),
 );
 
+sub new {
+	my ($class, %args) = @_;
+	my $config = $args{config} || ExtUtils::Config->new;
+	my %self = (
+		config => $config,
+		map { $_ => exists $args{$_} ? $filter{$_} ? $filter{$_}->($args{$_}, $config) : $args{$_} : ref $defaults{$_} ? $defaults{$_}->($config) : $defaults{$_} } keys %defaults,
+	);
+	$self{module_name} ||= do { my $module_name = $self{dist_name}; $module_name =~ s/-/::/g; $module_name } if defined $self{dist_name};
+	return bless \%self, $class;
+}
+
 for my $attribute (keys %defaults) {
 	no strict qw/refs/;
 	*{$attribute} = $hash_accessors{$attribute} ? 
@@ -86,17 +97,6 @@ for my $attribute (keys %defaults) {
 		my $self = shift;
 		return $self->{$attribute};
 	};
-}
-
-sub new {
-	my ($class, %args) = @_;
-	my $config = $args{config} || ExtUtils::Config->new;
-	my %self = (
-		config => $config,
-		map { $_ => exists $args{$_} ? $filter{$_} ? $filter{$_}->($args{$_}, $config) : $args{$_} : ref $defaults{$_} ? $defaults{$_}->($config) : $defaults{$_} } keys %defaults,
-	);
-	$self{module_name} ||= do { my $module_name = $self{dist_name}; $module_name =~ s/-/::/g; $module_name } if defined $self{dist_name};
-	return bless \%self, $class;
 }
 
 my @install_sets_keys = qw/lib arch bin script bindoc libdoc binhtml libhtml/;
