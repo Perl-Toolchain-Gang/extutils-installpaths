@@ -1,6 +1,6 @@
 package ExtUtils::InstallPaths;
 
-use 5.008001;
+use 5.006;
 use strict;
 use warnings;
 
@@ -99,8 +99,9 @@ for my $attribute (keys %defaults) {
 	};
 }
 
+my $script = $] > 5.008000 ? 'script' : 'bin';
 my @install_sets_keys = qw/lib arch bin script bindoc libdoc binhtml libhtml/;
-my @install_sets_tail = qw/bin script man1dir man3dir html1dir html3dir/;
+my @install_sets_tail = ('bin', $script, qw/man1dir man3dir html1dir html3dir/);
 my %install_sets_values = (
 	core   => [ qw/privlib archlib /, @install_sets_tail ],
 	site   => [ map { "site$_" } qw/lib arch/, @install_sets_tail ],
