@@ -7,7 +7,7 @@ use Test::More tests => 105;
 use Config;
 use File::Temp ();
 
-use File::Spec::Functions ':ALL';
+use File::Spec::Functions 0.83 ':ALL';
 my $tmp = File::Temp::tempdir('EIP-XXXXXXXX', CLEANUP => 1, DIR => tmpdir);
 
 use ExtUtils::Config;
