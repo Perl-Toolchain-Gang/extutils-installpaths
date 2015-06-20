@@ -1,6 +1,7 @@
 Revision history for ExtUtils-InstallPaths
 
 {{$NEXT}}
+          - Make tests prove and 5.6 friendly
 
 0.011     2015-02-16 00:47:54+01:00 Europe/Amsterdam
           Make EU::IP compatible with perl 5.6

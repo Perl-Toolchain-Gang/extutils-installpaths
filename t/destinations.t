@@ -1,14 +1,21 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 use strict;
 use warnings FATAL => 'all';
 use Test::More tests => 105;
 
 use Config;
-use File::Temp ();
+use File::Temp 'tempdir';
 
 use File::Spec::Functions 0.83 ':ALL';
-my $tmp = File::Temp::tempdir('EIP-XXXXXXXX', CLEANUP => 1, DIR => tmpdir);
+
+my $tmp = tempdir('EIP-XXXXXXXX', CLEANUP => 1, DIR => tmpdir);
+my $source = tempdir('EIP-XXXXXXXX', CLEANUP => 1, DIR => tmpdir);
+chdir $source;
+mkdir 'blib';
+for my $subdir (qw/lib arch bin script man1 man3/) {
+	mkdir catdir('blib', $subdir);
+}
 
 use ExtUtils::Config;
 use ExtUtils::InstallPaths;
