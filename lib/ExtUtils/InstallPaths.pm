@@ -329,14 +329,21 @@ sub install_types {
 }
 
 sub install_map {
-	my ($self, $blib) = @_;
-	$blib ||= $self->blib;
+	my ($self, $dirs) = @_;
+
+	my %localdir_for;
+	if ($dirs && %$dirs) {
+		%localdir_for = %$dirs;
+	}
+	else {
+		my $blib = $self->blib;
+		foreach my $type ($self->install_types) {
+			$localdir_for{$type} = File::Spec->catdir($blib, $type);
+		}
+	}
 
 	my (%map, @skipping);
-	foreach my $type ($self->install_types) {
-		my $localdir = File::Spec->catdir($blib, $type);
-		next unless -e $localdir;
-
+	foreach my $type (keys %localdir_for) {
 		# the line "...next if (($type eq 'bindoc'..." was one of many changes introduced for
 		# improving HTML generation on ActivePerl, see https://rt.cpan.org/Public/Bug/Display.html?id=53478
 		# Most changes were ok, but this particular line caused test failures in t/manifypods.t on windows,
@@ -344,8 +351,9 @@ sub install_map {
 
 		# ********* next if (($type eq 'bindoc' || $type eq 'libdoc') && not $self->is_unixish);
 
+		next if not -e $localdir_for{$type};
 		if (my $dest = $self->install_destination($type)) {
-			$map{$localdir} = $dest;
+			$map{$localdir_for{$type}} = $dest;
 		} else {
 			push @skipping, $type;
 		}
