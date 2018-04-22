@@ -342,13 +342,6 @@ sub install_map {
 
 	my (%map, @skipping);
 	foreach my $type (keys %localdir_for) {
-		# the line "...next if (($type eq 'bindoc'..." was one of many changes introduced for
-		# improving HTML generation on ActivePerl, see https://rt.cpan.org/Public/Bug/Display.html?id=53478
-		# Most changes were ok, but this particular line caused test failures in t/manifypods.t on windows,
-		# therefore it is commented out.
-
-		# ********* next if (($type eq 'bindoc' || $type eq 'libdoc') && not $self->is_unixish);
-
 		next if not -e $localdir_for{$type};
 		if (my $dest = $self->install_destination($type)) {
 			$map{$localdir_for{$type}} = $dest;
