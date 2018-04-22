@@ -16,7 +16,6 @@ my %defaults = (
 	install_base    => undef,
 	prefix          => undef,
 	verbose         => 0,
-	blib            => 'blib',
 	create_packlist => 1,
 	dist_name       => undef,
 	module_name     => undef,
@@ -336,9 +335,8 @@ sub install_map {
 		%localdir_for = %$dirs;
 	}
 	else {
-		my $blib = $self->blib;
 		foreach my $type ($self->install_types) {
-			$localdir_for{$type} = File::Spec->catdir($blib, $type);
+			$localdir_for{$type} = File::Spec->catdir('blib', $type);
 		}
 	}
 
@@ -567,10 +565,6 @@ The L<ExtUtils::Config|ExtUtils::Config> object used for this object.
 =attr verbose
 
 The verbosity of ExtUtils::InstallPaths. It defaults to 0
-
-=attr blib
-
-The location of the blib directory, it defaults to 'blib'.
 
 =attr create_packlist
 
