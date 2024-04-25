@@ -342,7 +342,7 @@ sub install_map {
 
 	my (%map, @skipping);
 	foreach my $type (keys %localdir_for) {
-		next if not -e $localdir_for{$type};
+		next if not $self->is_default_installable($type);
 		if (my $dest = $self->install_destination($type)) {
 			$map{$localdir_for{$type}} = $dest;
 		} else {
