@@ -2,6 +2,7 @@ Revision history for ExtUtils-InstallPaths
 
 {{$NEXT}}
           - Drop 5.006 support
+          - Compensate for perls without installsitescript
 
 0.013     2024-04-25 12:28:37+02:00 Europe/Brussels
           - Try to install any installable paths

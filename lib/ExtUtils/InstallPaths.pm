@@ -6,7 +6,7 @@ use warnings;
 
 use File::Spec ();
 use Carp ();
-use ExtUtils::Config 0.002;
+use ExtUtils::Config 0.009;
 
 my %complex_accessors = map { $_ => 1 } qw/prefix_relpaths install_sets/;
 my %hash_accessors = map { $_ => 1 } qw/install_path install_base_relpaths original_prefix /;
@@ -69,6 +69,9 @@ my %filter = (
 sub new {
 	my ($class, %args) = @_;
 	my $config = $args{config} || ExtUtils::Config->new;
+	if ($config->get('installsitescript') eq '') {
+		$config = $config->but({ installsitescript => $config->get('installsitebin') });
+	}
 	my %self = (
 		config => $config,
 		map { $_ => exists $args{$_} ? $filter{$_} ? $filter{$_}->($args{$_}, $config) : $args{$_} : ref $defaults{$_} ? $defaults{$_}->($config) : $defaults{$_} } keys %defaults,
