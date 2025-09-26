@@ -1,6 +1,7 @@
 Revision history for ExtUtils-InstallPaths
 
 {{$NEXT}}
+          - Restore installing non-standard types
 
 0.014     2024-09-10 18:20:50+02:00 Europe/Brussels
           - Drop 5.006 support
